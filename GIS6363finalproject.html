@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>GIS6363 Final Project for War Damage Assessment</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.25/"></script>
+    <script>
+	  require([
+		"esri/Map",
+		"esri/layers/FeatureLayer",
+		"esri/layers/TileLayer",
+		"esri/views/MapView",
+		"esri/widgets/Home",
+		"esri/widgets/Compass",
+		"esri/widgets/Zoom",
+		"esri/widgets/LayerList", 
+		"esri/widgets/ScaleBar"
+	  ], function(Map, FeatureLayer, TileLayer, MapView, Home, Compass, Zoom, LayerList, ScaleBar) {
+
+		// Create a FeatureLayer using the Feature Service URL
+		const PointsLayer = new FeatureLayer({
+		  url: "https://services2.arcgis.com/VNo0ht0YPXJoI4oE/arcgis/rest/services/MapAssessPoints_WFL1/FeatureServer"
+		});
+
+		// Create TileLayers using the Tile Imagery URLs
+		const prewarLayer = new TileLayer({
+		  url: "https://tiles.arcgis.com/tiles/VNo0ht0YPXJoI4oE/arcgis/rest/services/MapPrwar_WTL1/MapServer"
+		});
+
+		const PostwarLayer = new TileLayer({
+		  url: "https://tiles.arcgis.com/tiles/VNo0ht0YPXJoI4oE/arcgis/rest/services/MapPostwar_WTL1/MapServer"
+		});
+
+		const detectionLayer = new TileLayer({
+		  url: "https://tiles.arcgis.com/tiles/VNo0ht0YPXJoI4oE/arcgis/rest/services/damageDetection3/MapServer"
+		});
+
+		// Create a Map and add all layers
+		const map = new Map({
+		  basemap: "satellite", // Use the updated vector basemap
+		  layers: [detectionLayer, PostwarLayer, prewarLayer, PointsLayer]
+		});
+
+		// Create a MapView to display the map
+		const view = new MapView({
+		  container: "viewDiv",
+		  map: map,
+		  center: [37.998, 48.584],
+		  zoom: 15,
+		  maxScale: 1000 // Set the maximum scale (adjust as needed)
+		});
+
+		// Set the initial visibility of the layers
+		prewarLayer.visible = true;
+		PostwarLayer.visible = false;
+
+		// Add the Home widget to reset the view to the initial extent
+		const homeWidget = new Home({
+		  view: view
+		});
+		view.ui.add(homeWidget, "top-left");
+
+		// Add the Compass widget to orient the map
+		const compassWidget = new Compass({
+		  view: view
+		});
+		view.ui.add(compassWidget, "bottom-right");
+
+		// Add the Zoom widget for zooming in and out
+		const zoomWidget = new Zoom({
+		  view: view
+		});
+		view.ui.add(zoomWidget, "top-left");
+
+		// Add the LayerList widget to list and toggle layer visibility
+		const layerList = new LayerList({
+		  view: view
+		});
+		view.ui.add(layerList, "top-right"); // Position the LayerList widget in the top-right corner
+		
+		// Add the ScaleBar widget to the map
+		const scaleBar = new ScaleBar({
+		  view: view,
+		  unit: "metric", // Use "metric" for kilometers/meters or "non-metric" for miles/feet
+		  style: "ruler" // Use "line" to display as a scale line, or "ruler" for a scale ruler
+		});
+		view.ui.add(scaleBar, "bottom-right"); // Position the ScaleBar widget in the bottom-right corner
+
+		// Add a click event listener to the PointsLayer
+		view.on("click", function() {
+		  // Cycle the visibility of the layers
+		  if (prewarLayer.visible) {
+			// If prewarLayer is visible, hide it and show PostwarLayer
+			prewarLayer.visible = false;
+			PostwarLayer.visible = true;
+		  } else {
+			// If PostwarLayer is visible, hide it and show detectionLayer
+			PostwarLayer.visible = false;
+			prewarLayer.visible = true;
+		  } 
+		});
+	  });
+	</script>
+  </head>
+  <body>
+    <!-- Div element to hold the map -->
+    <div id="viewDiv" style="width: 100%; height: 100vh;"></div>
+  </body>
+</html>
